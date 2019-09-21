@@ -6,7 +6,6 @@ from time import sleep
 import subprocess
 import picamera
 
-
 #cwd = os.getcwd() # Current Working Dir
 pwd = os.path.expanduser("~") # user home dir
 # Get SSID to derermine when mobile
@@ -59,8 +58,20 @@ def Do_Cam():
         camera.capture(pixDir + '/' + last)
         camera.close()
         
-#need to def main!!!
-#but will vars be global?
+def Do_HTML():
+# Get performance
+    top = subprocess.run(["top", "-b", "-n1", "-u", "pi"], stdout=subprocess.PIPE, universal_newlines=True)
+    top = top.stdout
+# Write HTML
+    css1 = ' style="font-family: monospace; white-space: pre; background: yellow;" ' 
+    html = '<p>Dog Walk Camera Monitor</p>'
+    html = html + 'Last image capture: ' + dttm + '<br/>'
+    html = html + '<img src="http://' + IPAddr + '/~pi/' + dt + '/' + last + '" alt="Latest Image"/>' + '<br/>' 
+    html = html + '<hr>Performance<hr>' + '<p ' + css1 + '>' + top + '</p>' + '<br/>' 
+#   chown this file to current user
+    with open("/var/www/html/index.html", "w") as htmlFile:
+        htmlFile.write(htmlHead + html + htmlTail)
+
 
 Get_DtTm()
 pixDir = pwd + "/pix/" + dt
@@ -70,7 +81,6 @@ if not os.path.exists(pixDir): # Create target dir(s)
     print("py+ " + dttm + " " + pixDir, file=log)
 else:
     print("py+ " + dttm, file=log)
-
 
 # Main Loop ======================================================================
 cnt = 0
@@ -83,20 +93,11 @@ while True:
             ssidOld = ssidNew
             IPAddr = (subprocess.run(["hostname", "-I"], stdout=subprocess.PIPE).stdout.decode('utf-8')).rstrip()
             print ("py, " + dttm + " SSID=" + ssidNew + " IP=" + IPAddr, file=log)
+    cnt -= 1
     if (ssidNew == ssidMob): # We are on mobile WiFi
         Do_Cam()
-    cnt -= 1
-    top = subprocess.run(["top", "-b", "-n1", "-u", "pi"], stdout=subprocess.PIPE, universal_newlines=True)
-    top = top.stdout
-# Write HTML
-    html = '<p>Dog Walk Camera Monitor</p>'
-    html = html + 'Last image capture: ' + dttm + '<br/>'
-    html = html + '<img src="http://' + IPAddr + '/~pi/' + dt + '/' + last + '" alt="Latest Image"/>' + '<br/>' 
-    css1 = ' style="font-family: monospace; white-space: pre; background: yellow;" ' 
-    html = html + '<hr>Performance<hr>' + '<p ' + css1 + '>' + top + '</p>' + '<br/>' 
-#   chown this file to current user
-    with open("/var/www/html/index.html", "w") as htmlFile:
-        htmlFile.write(htmlHead + html + htmlTail)
+    Do_HTML()
+
 # Terminate background process
     if os.path.exists(pwd + "/stop"):
         os.remove(pwd + "/stop")
@@ -104,8 +105,6 @@ while True:
 
 # Main Loop End ==================================================================
 #
-#   top = subprocess.run(["top", "-b", "-n1"], stdout=subprocess.PIPE).stdout.decode('utf-8')
-#   print(top) # need head -5
 
 # Exit
 Get_DtTm()
