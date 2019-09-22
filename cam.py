@@ -7,10 +7,9 @@ import subprocess
 import picamera
 
 #cwd = os.getcwd() # Current Working Dir
-pwd = os.path.expanduser("~") # user home dir
+pwd = os.path.expanduser("~") # User Home Dir
 # Get SSID to derermine when mobile
 ssidOld = "NoSSID"
-#sidNew = ""
 # Read mobile SSID from file
 try:
     with open(pwd + '/ssidMob','r') as ssidMob:
@@ -36,7 +35,7 @@ htmlTail = """
 dt = ""
 tm = ""
 dttm = ""
-last=""
+last = ""
 
 def Get_DtTm():
     global dt
@@ -65,9 +64,10 @@ def Do_HTML():
 # Write HTML
     css1 = ' style="font-family: monospace; white-space: pre; background: yellow;" ' 
     html = '<p>Dog Walk Camera Monitor</p>'
-    html = html + 'Last image capture: ' + dttm + '<br/>'
-    html = html + '<img src="http://' + IPAddr + '/~pi/' + dt + '/' + last + '" alt="Latest Image"/>' + '<br/>' 
-    html = html + '<hr>Performance<hr>' + '<p ' + css1 + '>' + top + '</p>' + '<br/>' 
+    if last: # Capture this session
+        html += 'Last image capture: ' + dttm + '<br/>'
+        html += '<img src="http://' + IPAddr + '/~pi/' + dt + '/' + last + '" alt="Last Image"/>' + '<br/>' 
+    html += '<hr>Performance<hr>' + '<p ' + css1 + '>' + top + '</p>' + '<br/>' 
 #   chown this file to current user
     with open("/var/www/html/index.html", "w") as htmlFile:
         htmlFile.write(htmlHead + html + htmlTail)
@@ -96,6 +96,8 @@ while True:
     cnt -= 1
     if (ssidNew == ssidMob): # We are on mobile WiFi
         Do_Cam()
+    else:
+        sleep(5)
     Do_HTML()
 
 # Terminate background process
